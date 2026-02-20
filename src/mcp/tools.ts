@@ -3,11 +3,15 @@ import { z } from "zod";
 import { FeedService } from "../core/feed-service.js";
 import { SyncStateStore } from "../stores/sync-state-store.js";
 import { renderFeedItems, renderChannelTypes, renderChannelList } from "./render.js";
+import { summarizeItems } from "../summarize.js";
+
+export type UserIdResolver = () => string;
 
 export function registerTools(
   server: McpServer,
   feedService: FeedService,
   syncStates: SyncStateStore,
+  getUserId: UserIdResolver,
 ): void {
   // ── get_feed ──────────────────────────────────────────────────
 
@@ -23,7 +27,7 @@ export function registerTools(
       since: z.string().optional().describe("ISO timestamp — only items published after this"),
     },
     async (params) => {
-      const items = await feedService.getFeed({
+      const items = await feedService.getFeed(getUserId(), {
         limit: params.limit,
         channelIds: params.channel_ids,
         channelTypes: params.channel_types,
@@ -57,8 +61,11 @@ export function registerTools(
       tags: z.array(z.string()).optional().describe("Filter by tags"),
     },
     async (params) => {
-      const channels = feedService.listChannels({ type: params.type, tags: params.tags });
-      const states = new Map(syncStates.all().map((s) => [s.channelId, s]));
+      const channels = await feedService.listChannels(getUserId(), {
+        type: params.type,
+        tags: params.tags,
+      });
+      const states = new Map((await syncStates.all()).map((s) => [s.channelId, s]));
       return { content: [{ type: "text" as const, text: renderChannelList(channels, states) }] };
     },
   );
@@ -76,7 +83,7 @@ export function registerTools(
     },
     async (params) => {
       try {
-        const { channel, syncResult } = await feedService.createChannel({
+        const { channel, syncResult } = await feedService.createChannel(getUserId(), {
           type: params.type,
           name: params.name,
           config: params.config,
@@ -107,7 +114,7 @@ export function registerTools(
     },
     async (params) => {
       try {
-        const updated = await feedService.updateChannel(params.channel_id, {
+        const updated = await feedService.updateChannel(getUserId(), params.channel_id, {
           name: params.name,
           config: params.config,
           tags: params.tags,
@@ -157,6 +164,35 @@ export function registerTools(
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return { content: [{ type: "text" as const, text: `Error: ${msg}` }] };
+      }
+    },
+  );
+
+  // ── get_briefing ──────────────────────────────────────────────
+
+  server.tool(
+    "get_briefing",
+    "Get a Claude-generated summary briefing of your recent feed items. Requires ANTHROPIC_API_KEY on the server.",
+    {
+      limit: z.number().int().min(1).max(50).optional().describe("Max items to summarize (default 30)"),
+      tags: z.array(z.string()).optional().describe("Filter by channel tags before summarizing"),
+      since: z.string().optional().describe("ISO timestamp — only items published after this"),
+    },
+    async (params) => {
+      try {
+        const items = await feedService.getFeed(getUserId(), {
+          limit: params.limit ?? 30,
+          tags: params.tags,
+          since: params.since,
+        });
+        if (items.length === 0) {
+          return { content: [{ type: "text" as const, text: "No recent items to summarize." }] };
+        }
+        const summary = await summarizeItems(items);
+        return { content: [{ type: "text" as const, text: summary }] };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { content: [{ type: "text" as const, text: `Briefing failed: ${msg}` }] };
       }
     },
   );

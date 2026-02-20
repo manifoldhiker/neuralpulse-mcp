@@ -50,12 +50,14 @@ export class SyncCoordinator {
   private rateBudgets = new Map<string, RateBudget>();
   private backgroundTimer: ReturnType<typeof setInterval> | null = null;
   private backgroundIntervalMs: number;
+  private syncStateCache = new Map<string, SyncState>();
 
   constructor(
     private adapters: AdapterRegistry,
     private items: ItemStore,
     private syncStates: SyncStateStore,
     private channels?: ChannelStore,
+    private backgroundUserId?: string | null,
     options?: SyncCoordinatorOptions,
   ) {
     this.globalSemaphore = new Semaphore(options?.globalConcurrency ?? 8);
@@ -83,8 +85,12 @@ export class SyncCoordinator {
 
   private async backgroundTick(): Promise<void> {
     if (!this.channels) return;
-    const enabled = this.channels.list({ enabled: true });
-    const stale = enabled.filter((ch) => this.isStale(ch));
+    const userId = this.backgroundUserId ?? null;
+    const enabled = await this.channels.list(userId, { enabled: true });
+    const stale: InfoChannel[] = [];
+    for (const ch of enabled) {
+      if (await this.isStale(ch)) stale.push(ch);
+    }
     if (stale.length === 0) return;
     await Promise.allSettled(stale.map((ch) => this.syncOne(ch)));
   }
@@ -92,7 +98,10 @@ export class SyncCoordinator {
   // ── On-demand sync ──────────────────────────────────────────
 
   async ensureFresh(channels: InfoChannel[]): Promise<void> {
-    const stale = channels.filter((ch) => ch.enabled && this.isStale(ch));
+    const stale: InfoChannel[] = [];
+    for (const ch of channels) {
+      if (ch.enabled && (await this.isStale(ch))) stale.push(ch);
+    }
     if (stale.length === 0) return;
     await Promise.allSettled(stale.map((ch) => this.syncOne(ch)));
   }
@@ -103,8 +112,8 @@ export class SyncCoordinator {
 
   // ── Staleness check ─────────────────────────────────────────
 
-  private isStale(channel: InfoChannel): boolean {
-    const state = this.syncStates.get(channel.id);
+  private async isStale(channel: InfoChannel): Promise<boolean> {
+    const state = await this.syncStates.get(channel.id);
     if (!state) return true;
 
     if (state.lastStatus === "error" && state.nextRetryAfter) {
@@ -137,10 +146,10 @@ export class SyncCoordinator {
 
     try {
       const adapter = this.adapters.get(channel.type);
-      const prevState = this.syncStates.get(channel.id);
+      const prevState = await this.syncStates.get(channel.id);
       const result = await adapter.sync(channel, prevState?.cursor ?? null);
 
-      this.items.upsert(result.items);
+      await this.items.upsert(result.items);
 
       if (result.rateLimitRemaining !== undefined) {
         this.rateBudgets.set(channel.type, {
@@ -150,7 +159,7 @@ export class SyncCoordinator {
         });
       }
 
-      this.syncStates.save({
+      await this.syncStates.save({
         channelId: channel.id,
         lastSyncAt: new Date().toISOString(),
         lastStatus: "ok",
@@ -161,13 +170,13 @@ export class SyncCoordinator {
       return { itemCount: result.items.length };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      const prevState = this.syncStates.get(channel.id);
+      const prevState = await this.syncStates.get(channel.id);
       const failures = (prevState?.consecutiveFailures ?? 0) + 1;
 
       const backoffMs = Math.min(1000 * Math.pow(2, failures), 30 * 60_000);
       const nextRetry = new Date(Date.now() + backoffMs).toISOString();
 
-      this.syncStates.save({
+      await this.syncStates.save({
         channelId: channel.id,
         lastSyncAt: new Date().toISOString(),
         lastStatus: "error",

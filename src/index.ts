@@ -17,6 +17,8 @@ import { registerTools } from "./mcp/tools.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = resolve(__dirname, "..", "data");
 
+const LOCAL_USER_ID = "local";
+
 // ── Adapter registry ────────────────────────────────────────────
 
 const adapters = new AdapterRegistry();
@@ -24,7 +26,7 @@ adapters.register(new RssAdapter());
 adapters.register(new YouTubePodcastAdapter());
 adapters.register(new GitHubTrendsAdapter());
 
-// ── Stores ──────────────────────────────────────────────────────
+// ── Stores (legacy file-based for local stdio mode) ─────────────
 
 const channelStore = new JsonChannelStore(resolve(DATA_DIR, "channels.json"));
 const itemStore = new InMemoryItemStore();
@@ -32,7 +34,7 @@ const syncStateStore = new JsonSyncStateStore(resolve(DATA_DIR, "sync-state.json
 
 // ── Core services ───────────────────────────────────────────────
 
-const syncCoordinator = new SyncCoordinator(adapters, itemStore, syncStateStore, channelStore);
+const syncCoordinator = new SyncCoordinator(adapters, itemStore, syncStateStore, channelStore, LOCAL_USER_ID);
 const feedService = new FeedService(channelStore, itemStore, syncCoordinator, adapters);
 
 // ── MCP server ──────────────────────────────────────────────────
@@ -42,7 +44,7 @@ const server = new McpServer({
   version: "2.0.0",
 });
 
-registerTools(server, feedService, syncStateStore);
+registerTools(server, feedService, syncStateStore, () => LOCAL_USER_ID);
 
 // ── Start ───────────────────────────────────────────────────────
 

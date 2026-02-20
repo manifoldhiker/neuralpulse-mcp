@@ -14,6 +14,7 @@ import { rmSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = resolve(__dirname, "..", "data", "test");
+const USER = "test-user";
 
 rmSync(DATA_DIR, { recursive: true, force: true });
 
@@ -25,7 +26,7 @@ adapters.register(new GitHubTrendsAdapter());
 const channelStore = new JsonChannelStore(resolve(DATA_DIR, "channels.json"));
 const itemStore = new InMemoryItemStore();
 const syncStateStore = new JsonSyncStateStore(resolve(DATA_DIR, "sync-state.json"));
-const syncCoordinator = new SyncCoordinator(adapters, itemStore, syncStateStore, channelStore, {
+const syncCoordinator = new SyncCoordinator(adapters, itemStore, syncStateStore, channelStore, USER, {
   backgroundIntervalMs: 60_000,
 });
 const feedService = new FeedService(channelStore, itemStore, syncCoordinator, adapters);
@@ -42,7 +43,7 @@ async function run() {
   console.log(renderChannelTypes(types));
 
   console.log("\n=== 2. create_channel (RSS) ===");
-  const { channel, syncResult } = await feedService.createChannel({
+  const { channel, syncResult } = await feedService.createChannel(USER, {
     type: "rss",
     name: "Simon Willison",
     config: { url: "https://simonwillison.net/atom/everything/" },
@@ -52,28 +53,28 @@ async function run() {
   console.log(`Created: ${channel.name} (${channel.id}) — ${syncResult.itemCount} items`);
 
   console.log("\n=== 3. list_channels ===");
-  const channels = feedService.listChannels();
+  const channels = await feedService.listChannels(USER);
   assert(channels.length === 1, "expected 1 channel");
-  const states = new Map(syncStateStore.all().map((s) => [s.channelId, s]));
+  const states = new Map((await syncStateStore.all()).map((s) => [s.channelId, s]));
   console.log(renderChannelList(channels, states));
 
   console.log("\n=== 4. get_feed (limit=3) ===");
-  const items = await feedService.getFeed({ limit: 3 });
+  const items = await feedService.getFeed(USER, { limit: 3 });
   assert(items.length === 3, "expected 3 items");
   console.log(renderFeedItems(items));
 
   console.log("\n=== 5. get_feed by channel_type ===");
-  const byType = await feedService.getFeed({ limit: 2, channelTypes: ["rss"] });
+  const byType = await feedService.getFeed(USER, { limit: 2, channelTypes: ["rss"] });
   assert(byType.length === 2, "expected 2 items");
   console.log(`Got ${byType.length} RSS items`);
 
   console.log("\n=== 6. get_feed by tag ===");
-  const byTag = await feedService.getFeed({ limit: 2, tags: ["ai"] });
+  const byTag = await feedService.getFeed(USER, { limit: 2, tags: ["ai"] });
   assert(byTag.length === 2, "expected 2 items with 'ai' tag");
   console.log(`Got ${byTag.length} items tagged 'ai'`);
 
   console.log("\n=== 7. update_channel ===");
-  const updated = await feedService.updateChannel(channel.id, { tags: ["tech", "ai", "blog"] });
+  const updated = await feedService.updateChannel(USER, channel.id, { tags: ["tech", "ai", "blog"] });
   assert(updated.tags.length === 3, "expected 3 tags");
   console.log(`Updated tags: ${updated.tags.join(", ")}`);
 
@@ -83,7 +84,7 @@ async function run() {
   console.log(`Sync: ${syncRes.itemCount} items`);
 
   console.log("\n=== 9. create second channel + multi-channel feed ===");
-  const { channel: ch2, syncResult: sr2 } = await feedService.createChannel({
+  const { channel: ch2, syncResult: sr2 } = await feedService.createChannel(USER, {
     type: "rss",
     name: "Marca Football",
     config: { url: "https://e00-marca.uecdn.es/rss/en/football.xml" },
@@ -91,13 +92,13 @@ async function run() {
   });
   console.log(`Created: ${ch2.name} (${ch2.id}) — ${sr2.itemCount} items`);
 
-  const allItems = await feedService.getFeed({ limit: 5 });
+  const allItems = await feedService.getFeed(USER, { limit: 5 });
   const sources = new Set(allItems.map((i) => i.channelId));
   console.log(`Feed has items from ${sources.size} channel(s)`);
 
   console.log("\n=== 10. delete_channel ===");
   await feedService.deleteChannel(ch2.id);
-  const afterDelete = feedService.listChannels();
+  const afterDelete = await feedService.listChannels(USER);
   assert(afterDelete.length === 1, "expected 1 channel after delete");
   console.log(`Channels remaining: ${afterDelete.length}`);
 
@@ -115,8 +116,7 @@ async function run() {
   console.log(`YouTube type: ${ytType!.displayName} — ${ytType!.configSchema.length} config fields`);
 
   console.log("\n=== 13. create YouTube podcast channel ===");
-  // 3Blue1Brown's channel
-  const { channel: ytCh, syncResult: ytSync } = await feedService.createChannel({
+  const { channel: ytCh, syncResult: ytSync } = await feedService.createChannel(USER, {
     type: "youtube_podcast",
     name: "3Blue1Brown",
     config: { channelId: "UCYO_jab_esuFRV4b17AJtAw" },
@@ -126,13 +126,13 @@ async function run() {
   console.log(`Created: ${ytCh.name} (${ytCh.id}) — ${ytSync.itemCount} items`);
 
   console.log("\n=== 14. get_feed with YouTube items ===");
-  const ytItems = await feedService.getFeed({ limit: 3, channelTypes: ["youtube_podcast"] });
+  const ytItems = await feedService.getFeed(USER, { limit: 3, channelTypes: ["youtube_podcast"] });
   assert(ytItems.length > 0, "expected YouTube items");
   assert(ytItems[0].channelType === "youtube_podcast", "expected youtube_podcast type");
   console.log(renderFeedItems(ytItems));
 
   console.log("\n=== 15. mixed feed (RSS + YouTube) ===");
-  const mixed = await feedService.getFeed({ limit: 6 });
+  const mixed = await feedService.getFeed(USER, { limit: 6 });
   const mixedTypes = new Set(mixed.map((i) => i.channelType));
   console.log(`Mixed feed has ${mixedTypes.size} channel type(s): ${[...mixedTypes].join(", ")}`);
 
@@ -144,7 +144,7 @@ async function run() {
   console.log(`GitHub type: ${ghType!.displayName} — ${ghType!.configSchema.length} config fields`);
 
   console.log("\n=== 17. create GitHub channel ===");
-  const { channel: ghCh, syncResult: ghSync } = await feedService.createChannel({
+  const { channel: ghCh, syncResult: ghSync } = await feedService.createChannel(USER, {
     type: "github_trends",
     name: "MCP SDK",
     config: {
@@ -159,17 +159,17 @@ async function run() {
   assert(ghSync.itemCount > 0, "expected items from GitHub sync");
 
   console.log("\n=== 18. get_feed with GitHub items ===");
-  const ghItems = await feedService.getFeed({ limit: 3, channelTypes: ["github_trends"] });
+  const ghItems = await feedService.getFeed(USER, { limit: 3, channelTypes: ["github_trends"] });
   assert(ghItems.length > 0, "expected GitHub items");
   console.log(renderFeedItems(ghItems));
 
   console.log("\n=== 19. all-channel mixed feed ===");
-  const allMixed = await feedService.getFeed({ limit: 10 });
+  const allMixed = await feedService.getFeed(USER, { limit: 10 });
   const allTypes = new Set(allMixed.map((i) => i.channelType));
   console.log(`Mixed feed from ${allTypes.size} type(s): ${[...allTypes].join(", ")}`);
   console.log(`  Items: ${allMixed.length}`);
 
-  console.log(`\nTotal items in store: ${itemStore.count()}`);
+  console.log(`\nTotal items in store: ${await itemStore.count()}`);
   console.log("\n✅ All 19 tests passed!");
 
   rmSync(DATA_DIR, { recursive: true, force: true });

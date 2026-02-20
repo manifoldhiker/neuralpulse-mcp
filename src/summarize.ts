@@ -1,13 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { FeedItem } from "./feeds.js";
+import { NormalizedItem } from "./core/types.js";
 
-export async function summarizeItems(items: FeedItem[]): Promise<string> {
+export async function summarizeItems(items: NormalizedItem[]): Promise<string> {
   const client = new Anthropic();
 
   const userMessage = items
     .map(
       (item, i) =>
-        `${i + 1}. ${item.title} — ${item.source} (${item.published})\n${item.snippet}`
+        `${i + 1}. ${item.title} — ${item.channelType}:${item.channelId} (${item.publishedAt})\n${item.snippet}`,
     )
     .join("\n\n");
 

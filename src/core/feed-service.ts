@@ -17,11 +17,14 @@ function slugify(text: string): string {
     .slice(0, 48);
 }
 
-function makeUniqueId(base: string, exists: (id: string) => boolean): string {
-  if (!exists(base)) return base;
+async function makeUniqueId(
+  base: string,
+  exists: (id: string) => Promise<boolean>,
+): Promise<string> {
+  if (!(await exists(base))) return base;
   for (let i = 2; i < 1000; i++) {
     const candidate = `${base}-${i}`;
-    if (!exists(candidate)) return candidate;
+    if (!(await exists(candidate))) return candidate;
   }
   return `${base}-${Date.now()}`;
 }
@@ -36,10 +39,10 @@ export class FeedService {
 
   // ── Feed query ───────────────────────────────────────────────
 
-  async getFeed(query: FeedQuery): Promise<NormalizedItem[]> {
+  async getFeed(userId: string, query: FeedQuery): Promise<NormalizedItem[]> {
     const limit = Math.min(Math.max(query.limit ?? 20, 1), 100);
 
-    let channels = this.channels.list({ enabled: true });
+    let channels = await this.channels.list(userId, { enabled: true });
 
     if (query.channelIds?.length) {
       const idSet = new Set(query.channelIds);
@@ -73,16 +76,22 @@ export class FeedService {
 
   // ── Channel CRUD ─────────────────────────────────────────────
 
-  listChannels(filters?: { type?: string; tags?: string[] }): InfoChannel[] {
-    return this.channels.list(filters);
+  async listChannels(
+    userId: string,
+    filters?: { type?: string; tags?: string[] },
+  ): Promise<InfoChannel[]> {
+    return this.channels.list(userId, filters);
   }
 
-  async createChannel(params: {
-    type: string;
-    name: string;
-    config: Record<string, unknown>;
-    tags?: string[];
-  }): Promise<{ channel: InfoChannel; syncResult: { itemCount: number; error?: string } }> {
+  async createChannel(
+    userId: string,
+    params: {
+      type: string;
+      name: string;
+      config: Record<string, unknown>;
+      tags?: string[];
+    },
+  ): Promise<{ channel: InfoChannel; syncResult: { itemCount: number; error?: string } }> {
     const adapter = this.adapters.get(params.type);
     const validation = await adapter.validate(params.config);
     if (!validation.ok) {
@@ -90,7 +99,10 @@ export class FeedService {
     }
 
     const displayName = validation.displayName ?? params.name;
-    const id = makeUniqueId(slugify(displayName), (id) => this.channels.get(id) !== null);
+    const id = await makeUniqueId(
+      slugify(displayName),
+      async (id) => (await this.channels.get(id)) !== null,
+    );
     const now = new Date().toISOString();
 
     const channel: InfoChannel = {
@@ -104,17 +116,18 @@ export class FeedService {
       updatedAt: now,
     };
 
-    this.channels.save(channel);
+    await this.channels.save(userId, channel);
     const syncResult = await this.sync.syncNow(channel);
 
     return { channel, syncResult };
   }
 
   async updateChannel(
+    userId: string,
     id: string,
     patch: { name?: string; config?: Record<string, unknown>; tags?: string[]; enabled?: boolean },
   ): Promise<InfoChannel> {
-    const existing = this.channels.get(id);
+    const existing = await this.channels.get(id);
     if (!existing) throw new Error(`Channel not found: ${id}`);
 
     if (patch.config) {
@@ -134,15 +147,15 @@ export class FeedService {
       updatedAt: new Date().toISOString(),
     };
 
-    this.channels.save(updated);
+    await this.channels.save(userId, updated);
     return updated;
   }
 
   async deleteChannel(id: string): Promise<void> {
-    const existing = this.channels.get(id);
+    const existing = await this.channels.get(id);
     if (!existing) throw new Error(`Channel not found: ${id}`);
-    this.channels.delete(id);
-    this.items.deleteByChannel(id);
+    await this.channels.delete(id);
+    await this.items.deleteByChannel(id);
   }
 
   // ── Introspection ────────────────────────────────────────────
@@ -154,7 +167,7 @@ export class FeedService {
   // ── Sync ─────────────────────────────────────────────────────
 
   async syncChannel(id: string): Promise<{ itemCount: number; error?: string }> {
-    const channel = this.channels.get(id);
+    const channel = await this.channels.get(id);
     if (!channel) throw new Error(`Channel not found: ${id}`);
     return this.sync.syncNow(channel);
   }

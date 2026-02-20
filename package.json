@@ -6,7 +6,12 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "briefing": "tsx src/briefing.ts"
+    "dev:server": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "briefing": "tsx src/briefing.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push"
   },
   "repository": {
     "type": "git",
@@ -22,17 +27,26 @@
   "homepage": "https://github.com/manifoldhiker/neuralpulse-mcp#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
+    "@clerk/express": "^1.7.72",
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "cors": "^2.8.6",
     "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
+    "pg": "^8.18.0",
     "rss-parser": "^3.13.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.3.0",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.9",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
