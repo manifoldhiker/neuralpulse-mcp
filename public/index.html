@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NeuralPulse - AI-Powered Content Feed via MCP</title>
+  <title>NeuralPulse — Your AI handles the noise, so you focus on the crux</title>
   <meta
     name="description"
-    content="Aggregate RSS, YouTube, and GitHub into a unified feed with AI summaries. Connect any AI assistant via MCP."
+    content="Your AI cuts through the noise from RSS, YouTube, and GitHub — delivering only what matters. Free and open source."
   />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,11 +31,9 @@
         NeuralPulse
       </a>
       <div class="nav-links" id="nav-links">
-        <a href="#features">Features</a>
+        <a href="#demo">See It In Action</a>
         <a href="#how-it-works">How It Works</a>
-        <a href="#integration">Integration</a>
-        <a href="https://github.com/manifoldhiker/neuralpulse-mcp" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/manifoldhiker/neuralpulse-mcp#readme" class="btn-sm" target="_blank" rel="noopener">Get Started</a>
+        <a href="#install" class="btn-sm">Get Started Free</a>
       </div>
       <button
         class="mobile-toggle"
@@ -60,114 +58,175 @@
       <div class="container">
         <div class="hero-content">
           <p class="hero-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-            <span>Model Context Protocol</span> - Open Standard
+            <span class="pulse-dot"></span>
+            Free &amp; Open Source
           </p>
-          <h1>Your AI assistant's window to the web</h1>
-          <p>Aggregate RSS feeds, YouTube channels, and GitHub repos into a unified content stream. Get AI-powered summaries and briefings - all through MCP.</p>
+          <h1>Your AI handles the noise, so you focus on the crux</h1>
+          <p class="hero-sub">The internet is drowning in noise. NeuralPulse lets your AI cut through it — pulling from RSS, YouTube, and GitHub to deliver only what actually matters to you.</p>
           <div class="hero-actions">
-            <a href="https://github.com/manifoldhiker/neuralpulse-mcp#readme" class="btn btn-primary" target="_blank" rel="noopener">
+            <a href="#install" class="btn btn-primary">
+              Get Started Free
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />
               </svg>
-              Get Started
             </a>
-            <a href="#integration" class="btn btn-secondary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-              </svg>
-              View Config
-            </a>
+            <a href="#demo" class="btn btn-secondary">See It In Action</a>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="features">
+    <section id="install" class="install-section">
       <div class="container">
         <header class="section-header">
-          <p class="section-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-            </svg>
-            Features
-          </p>
-          <h2 class="section-title fade-up">Everything you need in one feed</h2>
-          <p class="section-subtitle fade-up">Connect your sources, let AI do the heavy lifting, and stay in flow with your assistant.</p>
+          <h2 class="section-title fade-up">Get started for free</h2>
+          <p class="section-subtitle fade-up">Add NeuralPulse to Claude Desktop in under a minute. No account needed.</p>
         </header>
-        <div class="features-grid">
-          <article class="feature-card fade-up">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" /></svg>
+        <div class="install-card fade-up">
+          <div class="install-url-block">
+            <label class="install-label" for="mcp-url">Your MCP server URL</label>
+            <div class="install-url-row">
+              <input
+                id="mcp-url"
+                type="text"
+                value="https://neuralpulse.manifoldsync.xyz/mcp"
+                readonly
+                class="install-url-input"
+              />
+              <button id="copy-url" class="install-copy-btn" type="button" aria-label="Copy URL to clipboard">
+                <svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg class="check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
             </div>
-            <h3>Multi-Source Feeds</h3>
-            <p>RSS, Atom, YouTube channels, and GitHub repos - all normalized into a single stream you can query and filter.</p>
+          </div>
+          <div class="install-steps">
+            <h3>Set up in Claude Desktop</h3>
+            <ol class="install-ol">
+              <li>
+                Open Claude Desktop and go to<br />
+                <strong>Settings &rarr; Developer &rarr; Edit Config</strong>
+              </li>
+              <li>
+                Paste this into your <code>claude_desktop_config.json</code>:
+                <div class="install-code">
+                  <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"neuralpulse"</span>: {
+      <span class="key">"url"</span>: <span class="str">"https://neuralpulse.manifoldsync.xyz/mcp"</span>
+    }
+  }
+}</pre>
+                </div>
+              </li>
+              <li>Restart Claude Desktop. That's it — ask it <em>"What can NeuralPulse do?"</em> to get started.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="quote-section">
+      <div class="container">
+        <blockquote class="quote-card fade-up">
+          <svg class="quote-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.3 2.8C6 4.5 2.5 8.5 2.5 13.3c0 3.4 2.2 5.5 4.8 5.5 2.4 0 4.2-1.8 4.2-4.1 0-2.2-1.5-3.8-3.5-4.1.3-2.4 2-4.8 4.8-6.1L11.3 2.8zm10 0c-5.3 1.7-8.8 5.7-8.8 10.5 0 3.4 2.2 5.5 4.8 5.5 2.4 0 4.2-1.8 4.2-4.1 0-2.2-1.5-3.8-3.5-4.1.3-2.4 2-4.8 4.8-6.1L21.3 2.8z" /></svg>
+          <p>Finding myself going back to RSS feeds a lot more recently. There's a lot more higher quality longform and a lot less slop intended to provoke. We should bring back RSS.</p>
+          <footer>
+            <cite>
+              <strong>Andrej Karpathy</strong>
+              <span>AI researcher &amp; former Tesla AI lead</span>
+            </cite>
+          </footer>
+        </blockquote>
+        <p class="quote-bridge fade-up">He's right — the good stuff is out there, buried under noise.<br />NeuralPulse lets your AI surface the crux.</p>
+      </div>
+    </section>
+
+    <section class="problem-section">
+      <div class="container">
+        <header class="section-header">
+          <h2 class="section-title fade-up">Too much noise, not enough crux</h2>
+          <p class="section-subtitle fade-up">The platforms optimized for engagement, not for you. The important stuff is getting harder to find.</p>
+        </header>
+        <div class="problem-grid">
+          <article class="problem-card fade-up">
+            <div class="problem-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            </div>
+            <h3>30 minutes scrolling, zero takeaways</h3>
+            <p>You open your phone for a quick update and emerge half an hour later having learned nothing useful.</p>
           </article>
-          <article class="feature-card fade-up">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4c0 2 1.5 3 3 4l1 1 1-1c1.5-1 3-2 3-4a4 4 0 0 0-4-4z" /><path d="M12 11v4" /><path d="M8 18h8" /><path d="M9 22h6" /></svg>
+          <article class="problem-card fade-up">
+            <div class="problem-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
             </div>
-            <h3>AI Summaries</h3>
-            <p>Claude analyzes your feed and generates concise briefings, surfacing the signal from the noise.</p>
+            <h3>Algorithms decide what you see</h3>
+            <p>What gets "recommended" is what drives clicks — not what actually matters to you. Outrage beats insight every time.</p>
           </article>
-          <article class="feature-card fade-up">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+          <article class="problem-card fade-up">
+            <div class="problem-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                <line x1="12" y1="2" x2="12" y2="12" />
+              </svg>
             </div>
-            <h3>Email Briefings</h3>
-            <p>Scheduled daily or weekly email digests with AI-curated summaries delivered straight to your inbox.</p>
-          </article>
-          <article class="feature-card fade-up">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-            </div>
-            <h3>Multi-User Auth</h3>
-            <p>Clerk-powered authentication with per-user channel configs, isolated feeds, and session management.</p>
-          </article>
-          <article class="feature-card fade-up">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
-            </div>
-            <h3>Smart Sync</h3>
-            <p>Background sync with rate limiting, retry logic, and TTL-based freshness checks - your feeds stay current automatically.</p>
-          </article>
-          <article class="feature-card fade-up">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
-            </div>
-            <h3>REST + MCP</h3>
-            <p>Dual interface: standard REST API for apps, plus native MCP protocol for seamless AI assistant integration.</p>
+            <h3>Important stuff gets buried</h3>
+            <p>That paper from your favorite researcher? Lost between rage bait and sponsored posts. The signal drowns in noise.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="stats-section">
+    <section id="demo" class="demo-section">
       <div class="container">
-        <div class="stats">
-          <div class="stat fade-up">
-            <div class="stat-value">3</div>
-            <div class="stat-label">Source Types</div>
+        <header class="section-header">
+          <h2 class="section-title fade-up">Your AI finds the crux for you</h2>
+          <p class="section-subtitle fade-up">No dashboards. No settings panels. Just tell it what matters — in plain English.</p>
+        </header>
+        <div class="chat-window fade-up" id="chat-window">
+          <div class="chat-header">
+            <span class="chat-status"></span>
+            NeuralPulse
           </div>
-          <div class="stat fade-up">
-            <div class="stat-value">8</div>
-            <div class="stat-label">MCP Tools</div>
-          </div>
-          <div class="stat fade-up">
-            <div class="stat-value">REST</div>
-            <div class="stat-label">+ MCP APIs</div>
-          </div>
-          <div class="stat fade-up">
-            <div class="stat-value">0</div>
-            <div class="stat-label">Config Hassle</div>
+          <div class="chat-messages">
+            <div class="msg user chat-msg">
+              <div class="msg-bubble">I care about AI research — especially Anthropic. Premier League football. And Cristiano Ronaldo.</div>
+            </div>
+            <div class="msg ai chat-msg">
+              <div class="msg-bubble">Done! I've set up feeds for AI research blogs, Anthropic's publications, Premier League news, and Ronaldo updates. They'll stay synced automatically.</div>
+            </div>
+            <div class="msg user chat-msg">
+              <div class="msg-bubble">Give me my morning briefing</div>
+            </div>
+            <div class="msg ai chat-msg">
+              <div class="msg-bubble">
+                <strong>Here's your morning briefing:</strong><br /><br />
+                <span class="briefing-topic">AI Research</span><br />
+                Anthropic published new findings on model interpretability — they can now identify specific circuits responsible for reasoning&hellip;<br /><br />
+                <span class="briefing-topic">Premier League</span><br />
+                Arsenal beat Chelsea 2-1 in yesterday's late kickoff. Liverpool maintain their lead with a comfortable 3-0 win&hellip;<br /><br />
+                <span class="briefing-topic">Cristiano Ronaldo</span><br />
+                Hat-trick in Al Nassr's 4-0 win. Now has 920 career goals.
+              </div>
+            </div>
+            <div class="msg user chat-msg">
+              <div class="msg-bubble">Go deeper on the Anthropic paper</div>
+            </div>
+            <div class="msg ai chat-msg">
+              <div class="msg-bubble">Sure. The paper, <em>"Circuit-Level Interpretability in Large Language Models,"</em> describes a method for tracing how specific model behaviors emerge from identifiable neural circuits&hellip;</div>
+            </div>
           </div>
         </div>
       </div>
@@ -176,92 +235,29 @@
     <section id="how-it-works">
       <div class="container">
         <header class="section-header">
-          <p class="section-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-            </svg>
-            How It Works
-          </p>
-          <h2 class="section-title fade-up">Three steps to your unified feed</h2>
-          <p class="section-subtitle fade-up">Get up and running in minutes. Configure once, benefit every day.</p>
+          <h2 class="section-title fade-up">Up and running in 30 seconds</h2>
+          <p class="section-subtitle fade-up">No credit card. No complicated setup. Seriously.</p>
         </header>
         <div class="steps">
           <article class="step fade-up">
             <div class="step-number">1</div>
             <div class="step-content">
-              <h3>Connect via MCP</h3>
-              <p>Add NeuralPulse to your AI assistant's MCP config. Works with Cursor, Claude Desktop, and any MCP-compatible client out of the box.</p>
+              <h3>Add it to your AI assistant</h3>
+              <p>One-click install. Works with Claude, Cursor, and any compatible assistant. Takes less time than reading this sentence.</p>
             </div>
           </article>
           <article class="step fade-up">
             <div class="step-number">2</div>
             <div class="step-content">
-              <h3>Add Your Channels</h3>
-              <p>Subscribe to RSS feeds, YouTube channels, or GitHub repos. Tag and organize them however you like - the adapter system handles the rest.</p>
+              <h3>Tell it what you care about</h3>
+              <p>"I follow AI research, Premier League football, and cooking." Just say it in plain English — it remembers and finds the right sources.</p>
             </div>
           </article>
           <article class="step fade-up">
             <div class="step-number">3</div>
             <div class="step-content">
-              <h3>Get AI Briefings</h3>
-              <p>Ask your assistant for a briefing. NeuralPulse fetches, filters, and summarizes your content in real time - or delivers it to your inbox on schedule.</p>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="integration">
-      <div class="container">
-        <header class="section-header">
-          <p class="section-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
-            Integration
-          </p>
-          <h2 class="section-title fade-up">Drop-in configuration</h2>
-          <p class="section-subtitle fade-up">Add NeuralPulse to your MCP config or call the REST API directly.</p>
-        </header>
-        <div class="integration-grid">
-          <article class="code-block fade-up">
-            <div class="code-header">
-              <span class="code-dot"></span><span class="code-dot"></span><span class="code-dot"></span>
-              <span class="code-label">mcp.json</span>
-            </div>
-            <div class="code-body">
-              <pre>{
-  <span class="key">"mcpServers"</span>: {
-    <span class="key">"neuralpulse"</span>: {
-      <span class="key">"command"</span>: <span class="str">"npx"</span>,
-      <span class="key">"args"</span>: [<span class="str">"tsx"</span>, <span class="str">"src/index.ts"</span>],
-      <span class="key">"env"</span>: {
-        <span class="key">"ANTHROPIC_API_KEY"</span>: <span class="str">"sk-..."</span>
-      }
-    }
-  }
-}</pre>
-            </div>
-          </article>
-          <article class="code-block fade-up">
-            <div class="code-header">
-              <span class="code-dot"></span><span class="code-dot"></span><span class="code-dot"></span>
-              <span class="code-label">REST API</span>
-            </div>
-            <div class="code-body">
-              <pre><span class="comment"># Fetch your unified feed</span>
-<span class="method">GET</span> <span class="url">/api/feed</span><span class="str">?limit=20&amp;tags=ai,dev</span>
-
-<span class="comment"># Get an AI-generated briefing</span>
-<span class="method">GET</span> <span class="url">/api/briefing</span><span class="str">?since=24h</span>
-
-<span class="comment"># List your channels</span>
-<span class="method">GET</span> <span class="url">/api/channels</span>
-
-<span class="comment"># Health check</span>
-<span class="method">GET</span> <span class="url">/health</span>
-  -&gt; { <span class="key">"status"</span>: <span class="str">"ok"</span> }</pre>
+              <h3>Ask for your briefing</h3>
+              <p>"What's new today?" — and you're caught up in 30 seconds. Go deeper on anything. Add or drop topics anytime.</p>
             </div>
           </article>
         </div>
@@ -271,14 +267,20 @@
     <section class="cta">
       <div class="container">
         <div class="cta-box fade-up">
-          <h2>Ready to supercharge your AI assistant?</h2>
-          <p>NeuralPulse is open source and free to self-host. Get started in under five minutes.</p>
+          <h2>Cut through the noise</h2>
+          <p>Free, open source, and ready in under a minute. Let your AI handle the noise so you can focus on what matters.</p>
           <div class="hero-actions">
-            <a href="https://github.com/manifoldhiker/neuralpulse-mcp" class="btn btn-primary" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
-              Star on GitHub
+            <a href="#install" class="btn btn-primary">
+              Get Started Free
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
             </a>
-            <a href="https://github.com/manifoldhiker/neuralpulse-mcp#readme" class="btn btn-secondary" target="_blank" rel="noopener">Read the Docs</a>
+            <a href="https://github.com/manifoldhiker/neuralpulse-mcp" class="btn btn-secondary" target="_blank" rel="noopener">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+              View on GitHub
+            </a>
           </div>
         </div>
       </div>
@@ -287,12 +289,10 @@
 
   <footer>
     <div class="container">
-      <div class="footer-left">&copy; 2026 NeuralPulse. Open source under ISC.</div>
+      <div class="footer-left">&copy; 2026 NeuralPulse. Free &amp; open source.</div>
       <div class="footer-links">
         <a href="https://github.com/manifoldhiker/neuralpulse-mcp" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/manifoldhiker/neuralpulse-mcp/issues" target="_blank" rel="noopener">Issues</a>
-        <a href="#features">Features</a>
-        <a href="#integration">API</a>
+        <a href="https://github.com/manifoldhiker/neuralpulse-mcp/issues" target="_blank" rel="noopener">Feedback</a>
       </div>
     </div>
   </footer>

@@ -57,7 +57,7 @@ function renderSuggestedFeeds(feeds: SuggestedFeed[]): string {
 const RESOURCE_URI = "neuralpulse://suggested-feeds/hn-popular-blogs";
 
 export function registerResources(server: McpServer): void {
-  server.resource(
+  server.registerResource(
     "suggested-feeds-hn-popular-blogs",
     RESOURCE_URI,
     {

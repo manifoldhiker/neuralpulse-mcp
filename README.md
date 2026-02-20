@@ -57,6 +57,28 @@ npm run build
 npm run dev
 ```
 
+## Docker Compose
+
+```bash
+# Start (build & run in background)
+docker compose up -d --build
+
+# View logs
+docker compose logs -f app
+
+# Restart after code changes
+docker compose up -d --build app
+
+# Push DB schema changes (after modifying src/db/schema.ts)
+docker compose exec app npm run db:push
+
+# Stop everything
+docker compose down
+
+# Stop and wipe the database volume
+docker compose down -v
+```
+
 ## Architecture
 
 ```
