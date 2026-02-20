@@ -21,6 +21,7 @@ import { RssAdapter } from "./adapters/rss.js";
 import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
 import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
 import { registerTools } from "./mcp/tools.js";
+import { registerResources } from "./mcp/resources.js";
 import { clerkMiddleware, requireAuth, resolveUserId } from "./auth/middleware.js";
 import { NeuralPulseOAuthProvider } from "./auth/oauth-provider.js";
 import { summarizeItems } from "./summarize.js";
@@ -221,6 +222,7 @@ const sessions = new Map<string, SessionEntry>();
 function createMcpServerForUser(userId: string): McpServer {
   const server = new McpServer({ name: "neuralpulse", version: "2.0.0" });
   registerTools(server, feedService, syncStateStore, () => userId);
+  registerResources(server);
   return server;
 }
 

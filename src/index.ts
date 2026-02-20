@@ -13,6 +13,7 @@ import { RssAdapter } from "./adapters/rss.js";
 import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
 import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
 import { registerTools } from "./mcp/tools.js";
+import { registerResources } from "./mcp/resources.js";
 
 const DATA_DIR = resolve(
   process.env.NEURALPULSE_DATA_DIR ?? join(homedir(), ".neuralpulse"),
@@ -47,6 +48,7 @@ const server = new McpServer({
 });
 
 registerTools(server, feedService, syncStateStore, () => LOCAL_USER_ID);
+registerResources(server);
 
 // ── Start ───────────────────────────────────────────────────────
 
