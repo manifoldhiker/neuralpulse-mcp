@@ -1,0 +1,32 @@
+{
+  "name": "neuralpulse-mcp",
+  "version": "1.0.0",
+  "description": "Personalized content feed served through any AI assistant via MCP",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manifoldhiker/neuralpulse-mcp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/manifoldhiker/neuralpulse-mcp/issues"
+  },
+  "homepage": "https://github.com/manifoldhiker/neuralpulse-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "rss-parser": "^3.13.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

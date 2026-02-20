@@ -1,0 +1,12 @@
+{
+  "feeds": [
+    {
+      "name": "simonwillison.net",
+      "url": "https://simonwillison.net/atom/everything/"
+    },
+    {
+      "name": "Marca Football",
+      "url": "https://e00-marca.uecdn.es/rss/en/football.xml"
+    }
+  ]
+}

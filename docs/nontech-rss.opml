@@ -1,0 +1,10 @@
+<outline text="Sports &amp; Entertainment" title="Sports &amp; Entertainment">
+  <outline type="rss" text="BBC Sport Football" title="BBC Sport Football" xmlUrl="https://feeds.bbci.co.uk/sport/football/rss.xml" htmlUrl="https://www.bbc.co.uk/sport/football"/>
+  <outline type="rss" text="The Guardian Football" title="The Guardian Football" xmlUrl="https://www.theguardian.com/football/rss" htmlUrl="https://www.theguardian.com/football"/>
+  <outline type="rss" text="ESPN FC" title="ESPN FC" xmlUrl="https://www.espn.com/espn/rss/soccer/news" htmlUrl="https://www.espn.com/soccer/"/>
+  <outline type="rss" text="Marca English" title="Marca English" xmlUrl="https://e00-marca.uecdn.es/rss/en/football.xml" htmlUrl="https://www.marca.com/en/football.html"/>
+  <outline type="rss" text="r/soccer" title="r/soccer" xmlUrl="https://www.reddit.com/r/soccer/.rss" htmlUrl="https://www.reddit.com/r/soccer/"/>
+  <outline type="rss" text="r/Cristiano" title="r/Cristiano" xmlUrl="https://www.reddit.com/r/Cristiano/.rss" htmlUrl="https://www.reddit.com/r/Cristiano/"/>
+  <outline type="rss" text="Managing Madrid" title="Managing Madrid" xmlUrl="https://www.managingmadrid.com/rss/current" htmlUrl="https://www.managingmadrid.com"/>
+  <outline type="rss" text="Tedium" title="Tedium" xmlUrl="https://feed.tedium.co/" htmlUrl="https://tedium.co"/>
+</outline>

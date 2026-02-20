@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "neuralpulse": {
+      "command": "npx",
+      "args": ["tsx", "src/index.ts"],
+      "cwd": "/Users/mykhailokilianovskyi/src/neuralpulse-mcp"
+    }
+  }
+}
