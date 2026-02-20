@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuralPulse - Authorize</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #16161e;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo { font-size: 1.5rem; font-weight: 700; color: #7c5cfc; margin-bottom: .5rem; }
+    .subtitle { color: #888; font-size: .9rem; margin-bottom: 2rem; }
+    #clerk-signin { margin-bottom: 1.5rem; }
+    .consent { display: none; }
+    .consent.visible { display: block; }
+    .consent h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+    .consent p { color: #aaa; font-size: .9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .client-name { color: #7c5cfc; font-weight: 600; }
+    .scope-list {
+      text-align: left;
+      background: #1e1e2a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: .85rem;
+    }
+    .scope-list li { list-style: none; padding: .35rem 0; color: #ccc; }
+    .btn-row { display: flex; gap: .75rem; }
+    .btn {
+      flex: 1;
+      padding: .75rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-approve { background: #7c5cfc; color: #fff; }
+    .btn-deny { background: #2a2a3a; color: #aaa; }
+    .error { color: #f87171; font-size: .9rem; margin-top: 1rem; display: none; }
+    .error.visible { display: block; }
+    .loading { color: #888; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">NeuralPulse</div>
+    <div class="subtitle">Authorize application access</div>
+
+    <div id="clerk-signin"></div>
+
+    <div id="consent" class="consent">
+      <h2>Grant access to <span id="client-name" class="client-name">MCP Client</span>?</h2>
+      <p>This application is requesting access to your NeuralPulse account.</p>
+      <ul class="scope-list" id="scope-list">
+        <li>Read your content feed</li>
+        <li>Manage your channels</li>
+        <li>Generate briefings</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-deny" id="btn-deny">Deny</button>
+        <button class="btn btn-approve" id="btn-approve">Approve</button>
+      </div>
+    </div>
+
+    <div id="error" class="error"></div>
+    <div id="loading" class="loading">Loading...</div>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var authReqId = params.get("auth_req");
+      var loadingEl = document.getElementById("loading");
+      var errorEl = document.getElementById("error");
+      var consentEl = document.getElementById("consent");
+      var signInEl = document.getElementById("clerk-signin");
+
+      function showError(msg) {
+        loadingEl.style.display = "none";
+        errorEl.textContent = msg;
+        errorEl.classList.add("visible");
+      }
+
+      if (!authReqId) {
+        showError("Missing authorization request. Please try connecting again.");
+        return;
+      }
+
+      fetch("/oauth/clerk-config")
+        .then(function (r) { return r.json(); })
+        .then(function (cfg) { loadClerk(cfg.publishableKey); })
+        .catch(function () { showError("Unable to load authentication configuration."); });
+
+      function loadClerk(publishableKey) {
+        var frontendApi = extractFrontendApi(publishableKey);
+        if (!frontendApi) {
+          showError("Invalid authentication configuration.");
+          return;
+        }
+
+        var script = document.createElement("script");
+        script.setAttribute("data-clerk-publishable-key", publishableKey);
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        script.src = "https://" + frontendApi + "/npm/@clerk/clerk-js@5/dist/clerk.browser.js";
+        script.addEventListener("load", function () {
+          initClerk(publishableKey);
+        });
+        script.addEventListener("error", function () {
+          showError("Failed to load authentication library.");
+        });
+        document.head.appendChild(script);
+      }
+
+      function extractFrontendApi(pk) {
+        try {
+          var encoded = pk.replace(/^pk_(test|live)_/, "");
+          var decoded = atob(encoded);
+          return decoded.replace(/\$$/, "");
+        } catch (e) {
+          return null;
+        }
+      }
+
+      async function initClerk(publishableKey) {
+        try {
+          var clerk = window.Clerk;
+          if (!clerk) {
+            showError("Authentication library failed to initialize.");
+            return;
+          }
+
+          if (!clerk.loaded) {
+            await clerk.load();
+          }
+
+          loadingEl.style.display = "none";
+
+          if (!clerk.user) {
+            signInEl.style.display = "block";
+            clerk.mountSignIn(signInEl, {
+              afterSignInUrl: window.location.href,
+              appearance: {
+                variables: { colorPrimary: "#7c5cfc" },
+                elements: { rootBox: { width: "100%" } },
+              },
+            });
+
+            await new Promise(function (resolve) {
+              if (clerk.user) return resolve();
+              clerk.addListener(function () {
+                if (clerk.user) resolve();
+              });
+            });
+
+            signInEl.style.display = "none";
+          }
+
+          consentEl.classList.add("visible");
+
+          document.getElementById("btn-approve").addEventListener("click", async function () {
+            this.disabled = true;
+            this.textContent = "Approving...";
+            try {
+              var token = await clerk.session.getToken();
+              var resp = await fetch("/oauth/approve", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": "Bearer " + token,
+                },
+                body: JSON.stringify({ auth_req: authReqId }),
+              });
+
+              var body = await resp.json();
+              if (body.redirect) {
+                window.location.href = body.redirect;
+              } else {
+                showError(body.error || "Authorization failed");
+                this.disabled = false;
+                this.textContent = "Approve";
+              }
+            } catch (err) {
+              showError("Network error: " + err.message);
+              this.disabled = false;
+              this.textContent = "Approve";
+            }
+          });
+
+          document.getElementById("btn-deny").addEventListener("click", function () {
+            showError("Access denied. You can close this window.");
+          });
+
+        } catch (err) {
+          showError("Authentication error: " + err.message);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

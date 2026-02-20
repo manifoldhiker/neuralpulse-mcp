@@ -63,6 +63,71 @@ export const feedItems = pgTable(
   ],
 );
 
+// ── OAuth clients (RFC 7591 dynamic registration) ────────────────
+
+export const oauthClients = pgTable("oauth_clients", {
+  clientId: text("client_id").primaryKey(),
+  clientSecret: text("client_secret"),
+  clientSecretExpiresAt: integer("client_secret_expires_at"),
+  redirectUris: jsonb("redirect_uris").notNull().$type<string[]>(),
+  clientName: text("client_name"),
+  metadata: jsonb("metadata").notNull().$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ── OAuth pending authorization requests ─────────────────────────
+
+export const oauthAuthRequests = pgTable("oauth_auth_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: text("client_id").notNull(),
+  redirectUri: text("redirect_uri").notNull(),
+  state: text("state"),
+  codeChallenge: text("code_challenge").notNull(),
+  scopes: text("scopes").array().notNull().default([]),
+  resource: text("resource"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+// ── OAuth authorization codes ────────────────────────────────────
+
+export const oauthAuthorizationCodes = pgTable("oauth_authorization_codes", {
+  code: text("code").primaryKey(),
+  clientId: text("client_id").notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  redirectUri: text("redirect_uri").notNull(),
+  codeChallenge: text("code_challenge").notNull(),
+  scopes: text("scopes").array().notNull().default([]),
+  resource: text("resource"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+// ── OAuth tokens (access + refresh) ─────────────────────────────
+
+export const oauthTokens = pgTable(
+  "oauth_tokens",
+  {
+    token: text("token").primaryKey(),
+    type: varchar("type", { length: 10 }).notNull().$type<"access" | "refresh">(),
+    clientId: text("client_id").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    scopes: text("scopes").array().notNull().default([]),
+    resource: text("resource"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("oauth_tokens_user_id_idx").on(t.userId),
+    index("oauth_tokens_client_id_idx").on(t.clientId),
+  ],
+);
+
 // ── Sync state (replaces sync-state.json) ────────────────────────
 
 export const syncState = pgTable("sync_state", {

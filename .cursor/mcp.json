@@ -1,9 +1,12 @@
 {
   "mcpServers": {
     "neuralpulse": {
+      "url": "https://neuralpulse.manifoldsync.xyz/mcp"
+    },
+    "neuralpulse-local": {
       "command": "npx",
       "args": ["tsx", "src/index.ts"],
-      "cwd": "/Users/mykhailokilianovskyi/src/neuralpulse-mcp"
+      "cwd": "/root/src/neuralpulse-mcp"
     }
   }
 }

@@ -1,12 +1,15 @@
 import "dotenv/config";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type Request, type Response } from "express";
 import cors from "cors";
+import { eq } from "drizzle-orm";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
+import { requireBearerAuth } from "@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js";
 
 import { AdapterRegistry } from "./core/adapter-registry.js";
 import { FeedService } from "./core/feed-service.js";
@@ -19,8 +22,9 @@ import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
 import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
 import { registerTools } from "./mcp/tools.js";
 import { clerkMiddleware, requireAuth, resolveUserId } from "./auth/middleware.js";
+import { NeuralPulseOAuthProvider } from "./auth/oauth-provider.js";
 import { summarizeItems } from "./summarize.js";
-import { closeDb } from "./db/index.js";
+import { getDb, closeDb, schema } from "./db/index.js";
 
 // ── Adapter registry ────────────────────────────────────────────
 
@@ -40,9 +44,20 @@ const syncStateStore = new PgSyncStateStore();
 const syncCoordinator = new SyncCoordinator(adapters, itemStore, syncStateStore, channelStore);
 const feedService = new FeedService(channelStore, itemStore, syncCoordinator, adapters);
 
+// ── OAuth provider ──────────────────────────────────────────────
+
+const oauthProvider = new NeuralPulseOAuthProvider();
+
+const PORT = Number(process.env.PORT ?? 3000);
+const serverUrl =
+  process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== "*"
+    ? process.env.CORS_ORIGIN
+    : `http://localhost:${PORT}`;
+
 // ── Express app ─────────────────────────────────────────────────
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? true, credentials: true }));
 
@@ -55,9 +70,89 @@ app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", server: "neuralpulse", version: "2.0.0" });
 });
 
+// ── OAuth auth router (before Clerk middleware) ─────────────────
+
+app.use(
+  mcpAuthRouter({
+    provider: oauthProvider,
+    issuerUrl: new URL(serverUrl),
+    baseUrl: new URL(serverUrl),
+    scopesSupported: ["mcp:read_feed", "mcp:write_subscriptions"],
+    resourceName: "NeuralPulse MCP",
+    resourceServerUrl: new URL(serverUrl),
+  }),
+);
+
+app.get("/oauth/clerk-config", (_req: Request, res: Response) => {
+  res.json({ publishableKey: process.env.CLERK_PUBLISHABLE_KEY ?? "" });
+});
+
+app.get("/oauth/login", (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "..", "public", "oauth-login.html"));
+});
+
+// ── Clerk middleware (for web app + /oauth/approve) ─────────────
+
 app.use(clerkMiddleware);
 
-// ── REST API ────────────────────────────────────────────────────
+// ── OAuth approve (requires Clerk session) ──────────────────────
+
+app.post("/oauth/approve", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReqId = req.body.auth_req;
+    if (!authReqId) {
+      res.status(400).json({ error: "Missing auth_req" });
+      return;
+    }
+
+    const db = getDb();
+    const [authReq] = await db
+      .select()
+      .from(schema.oauthAuthRequests)
+      .where(eq(schema.oauthAuthRequests.id, authReqId))
+      .limit(1);
+
+    if (!authReq) {
+      res.status(404).json({ error: "Authorization request not found or expired" });
+      return;
+    }
+
+    if (new Date() > authReq.expiresAt) {
+      await db.delete(schema.oauthAuthRequests).where(eq(schema.oauthAuthRequests.id, authReqId));
+      res.status(410).json({ error: "Authorization request expired" });
+      return;
+    }
+
+    const userId = await resolveUserId(req);
+    const code = randomBytes(32).toString("hex");
+    const now = new Date();
+
+    await db.insert(schema.oauthAuthorizationCodes).values({
+      code,
+      clientId: authReq.clientId,
+      userId,
+      redirectUri: authReq.redirectUri,
+      codeChallenge: authReq.codeChallenge,
+      scopes: authReq.scopes,
+      resource: authReq.resource,
+      createdAt: now,
+      expiresAt: new Date(now.getTime() + 10 * 60 * 1000),
+    });
+
+    await db.delete(schema.oauthAuthRequests).where(eq(schema.oauthAuthRequests.id, authReqId));
+
+    const redirectUrl = new URL(authReq.redirectUri);
+    redirectUrl.searchParams.set("code", code);
+    if (authReq.state) redirectUrl.searchParams.set("state", authReq.state);
+
+    res.json({ redirect: redirectUrl.toString() });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: `Authorization failed: ${msg}` });
+  }
+});
+
+// ── REST API (requires Clerk session) ───────────────────────────
 
 app.get("/api/me", requireAuth, async (req: Request, res: Response) => {
   try {
@@ -114,7 +209,7 @@ app.get("/api/briefing", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-// ── MCP over StreamableHTTP ─────────────────────────────────────
+// ── MCP over StreamableHTTP (requires OAuth Bearer token) ───────
 
 interface SessionEntry {
   transport: StreamableHTTPServerTransport;
@@ -129,32 +224,32 @@ function createMcpServerForUser(userId: string): McpServer {
   return server;
 }
 
-app.post("/mcp", requireAuth, async (req: Request, res: Response) => {
+const mcpBearerAuth = requireBearerAuth({
+  verifier: oauthProvider,
+  resourceMetadataUrl: `${serverUrl}/.well-known/oauth-protected-resource`,
+});
+
+app.post("/mcp", mcpBearerAuth, async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   let entry: SessionEntry | undefined;
 
   if (sessionId && sessions.has(sessionId)) {
     entry = sessions.get(sessionId)!;
   } else if (!sessionId && isInitializeRequest(req.body)) {
-    try {
-      const userId = await resolveUserId(req);
-      const mcpServer = createMcpServerForUser(userId);
-      let currentTransport: StreamableHTTPServerTransport;
+    const userId = req.auth!.extra!.userId as string;
+    const mcpServer = createMcpServerForUser(userId);
+    let currentTransport: StreamableHTTPServerTransport;
 
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (id) => {
-          sessions.set(id, { transport: currentTransport, server: mcpServer, userId });
-        },
-      });
-      currentTransport = transport;
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+      onsessioninitialized: (id) => {
+        sessions.set(id, { transport: currentTransport, server: mcpServer, userId });
+      },
+    });
+    currentTransport = transport;
 
-      await mcpServer.connect(transport);
-      entry = { transport, server: mcpServer, userId };
-    } catch (err) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
+    await mcpServer.connect(transport);
+    entry = { transport, server: mcpServer, userId };
   } else {
     res.status(400).json({ error: "Invalid or missing session" });
     return;
@@ -163,7 +258,7 @@ app.post("/mcp", requireAuth, async (req: Request, res: Response) => {
   await entry.transport.handleRequest(req, res, req.body);
 });
 
-app.get("/mcp", requireAuth, async (req: Request, res: Response) => {
+app.get("/mcp", mcpBearerAuth, async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string;
   const entry = sessions.get(sessionId);
   if (entry) {
@@ -186,15 +281,14 @@ app.delete("/mcp", async (req: Request, res: Response) => {
 
 // ── Start ───────────────────────────────────────────────────────
 
-const PORT = Number(process.env.PORT ?? 3000);
-
 syncCoordinator.startBackgroundSync();
 
 const httpServer = app.listen(PORT, () => {
-  console.log(`NeuralPulse server running on http://localhost:${PORT}`);
-  console.log(`  MCP endpoint: http://localhost:${PORT}/mcp`);
-  console.log(`  API endpoint: http://localhost:${PORT}/api`);
-  console.log(`  Health check: http://localhost:${PORT}/health`);
+  console.log(`NeuralPulse server running on ${serverUrl}`);
+  console.log(`  MCP endpoint: ${serverUrl}/mcp`);
+  console.log(`  OAuth metadata: ${serverUrl}/.well-known/oauth-authorization-server`);
+  console.log(`  API endpoint: ${serverUrl}/api`);
+  console.log(`  Health check: ${serverUrl}/health`);
 });
 
 async function shutdown() {

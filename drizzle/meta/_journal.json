@@ -8,6 +8,13 @@
       "when": 1771591889912,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771599335182,
+      "tag": "0001_aspiring_the_liberteens",
+      "breakpoints": true
     }
   ]
 }
