@@ -128,6 +128,16 @@ export const oauthTokens = pgTable(
   ],
 );
 
+// ── User preferences ─────────────────────────────────────────────
+
+export const userPreferences = pgTable("user_preferences", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  stylePreference: text("style_preference"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ── Sync state (replaces sync-state.json) ────────────────────────
 
 export const syncState = pgTable("sync_state", {

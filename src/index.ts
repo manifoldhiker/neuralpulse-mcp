@@ -14,6 +14,8 @@ import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
 import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
 import { registerTools } from "./mcp/tools.js";
 import { registerResources } from "./mcp/resources.js";
+import { registerPrompts } from "./mcp/prompts.js";
+import { FileStylePreferenceStore } from "./stores/style-preference-store.js";
 
 const DATA_DIR = resolve(
   process.env.NEURALPULSE_DATA_DIR ?? join(homedir(), ".neuralpulse"),
@@ -34,6 +36,7 @@ adapters.register(new GitHubTrendsAdapter());
 const channelStore = new JsonChannelStore(resolve(DATA_DIR, "channels.json"));
 const itemStore = new InMemoryItemStore();
 const syncStateStore = new JsonSyncStateStore(resolve(DATA_DIR, "sync-state.json"));
+const stylePreferenceStore = new FileStylePreferenceStore(resolve(DATA_DIR, "style-preferences.json"));
 
 // ── Core services ───────────────────────────────────────────────
 
@@ -47,8 +50,10 @@ const server = new McpServer({
   version: "2.0.0",
 });
 
-registerTools(server, feedService, syncStateStore, () => LOCAL_USER_ID);
+const getUserId = () => LOCAL_USER_ID;
+registerTools(server, feedService, syncStateStore, stylePreferenceStore, getUserId);
 registerResources(server);
+registerPrompts(server, stylePreferenceStore, getUserId);
 
 // ── Start ───────────────────────────────────────────────────────
 

@@ -22,6 +22,8 @@ import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
 import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
 import { registerTools } from "./mcp/tools.js";
 import { registerResources } from "./mcp/resources.js";
+import { registerPrompts } from "./mcp/prompts.js";
+import { PgStylePreferenceStore } from "./stores/style-preference-store.js";
 import { clerkMiddleware, requireAuth, resolveUserId } from "./auth/middleware.js";
 import { NeuralPulseOAuthProvider } from "./auth/oauth-provider.js";
 import { summarizeItems } from "./summarize.js";
@@ -39,6 +41,7 @@ adapters.register(new GitHubTrendsAdapter());
 const channelStore = new PgChannelStore();
 const itemStore = new PgItemStore();
 const syncStateStore = new PgSyncStateStore();
+const stylePreferenceStore = new PgStylePreferenceStore();
 
 // ── Core services ───────────────────────────────────────────────
 
@@ -221,8 +224,10 @@ const sessions = new Map<string, SessionEntry>();
 
 function createMcpServerForUser(userId: string): McpServer {
   const server = new McpServer({ name: "neuralpulse", version: "2.0.0" });
-  registerTools(server, feedService, syncStateStore, () => userId);
+  const getUserId = () => userId;
+  registerTools(server, feedService, syncStateStore, stylePreferenceStore, getUserId);
   registerResources(server);
+  registerPrompts(server, stylePreferenceStore, getUserId);
   return server;
 }
 

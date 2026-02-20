@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FeedService } from "../core/feed-service.js";
 import { SyncStateStore } from "../stores/sync-state-store.js";
+import { StylePreferenceStore } from "../stores/style-preference-store.js";
 import { renderFeedItems, renderChannelTypes, renderChannelList } from "./render.js";
 import { summarizeItems } from "../summarize.js";
 
@@ -11,6 +12,7 @@ export function registerTools(
   server: McpServer,
   feedService: FeedService,
   syncStates: SyncStateStore,
+  stylePrefs: StylePreferenceStore,
   getUserId: UserIdResolver,
 ): void {
   // ── get_feed ──────────────────────────────────────────────────
@@ -194,6 +196,45 @@ export function registerTools(
         const msg = err instanceof Error ? err.message : String(err);
         return { content: [{ type: "text" as const, text: `Briefing failed: ${msg}` }] };
       }
+    },
+  );
+
+  // ── set_style_preference ─────────────────────────────────────────
+
+  server.tool(
+    "set_style_preference",
+    "Save a markdown style-preference that controls how feed content and briefings are presented to you. " +
+      "Describe tone, length, formatting, grouping, or anything else you care about.",
+    {
+      style_markdown: z.string().describe(
+        "Markdown describing your preferred presentation style (tone, format, length, grouping, etc.)",
+      ),
+    },
+    async (params) => {
+      try {
+        await stylePrefs.set(getUserId(), params.style_markdown);
+        return {
+          content: [{ type: "text" as const, text: "Style preference saved. It will be used for future briefings and feed presentations." }],
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { content: [{ type: "text" as const, text: `Error: ${msg}` }] };
+      }
+    },
+  );
+
+  // ── get_style_preference ─────────────────────────────────────────
+
+  server.tool(
+    "get_style_preference",
+    "Retrieve your current content-presentation style preference.",
+    {},
+    async () => {
+      const pref = await stylePrefs.get(getUserId());
+      if (!pref) {
+        return { content: [{ type: "text" as const, text: "No style preference set. Use set_style_preference to define one." }] };
+      }
+      return { content: [{ type: "text" as const, text: pref }] };
     },
   );
 }
