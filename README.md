@@ -1,8 +1,14 @@
-# neuralpulse-mcp
+# NeuralPulse MCP
 
 Personalized content feed served through any AI assistant via MCP.
 
-An MCP server that fetches RSS/Atom feeds and returns raw items — summarization happens on the AI assistant side.
+An MCP server that aggregates content from multiple source types (RSS, YouTube, GitHub) into a unified feed. Summarization happens on the AI assistant side.
+
+## Supported Channel Types
+
+- **RSS / Atom Feed** — subscribe to any RSS or Atom feed by URL
+- **YouTube Podcast / Channel** — subscribe to a YouTube channel's uploads
+- **GitHub Repository Tracker** — track releases, commits, PRs, and issues
 
 ## Setup
 
@@ -14,15 +20,30 @@ npm install
 
 The repo includes `.cursor/mcp.json` which registers the server automatically. After `npm install`, restart Cursor (or reload MCP servers) and the `neuralpulse` server will appear.
 
-You can then ask your AI assistant things like "give me my morning briefing" and it will call `get_feed` under the hood.
+You can then ask your AI assistant things like:
+- "Give me my morning briefing"
+- "What's new in AI?"
+- "Subscribe me to 3Blue1Brown on YouTube"
+- "Track releases for modelcontextprotocol/typescript-sdk on GitHub"
+- "What channel types are available?"
 
-## Run standalone (for testing)
+## MCP Tools
 
-```bash
-npm run dev
-```
+### Feed
 
-This starts the MCP server on stdio. It expects JSON-RPC messages on stdin and responds on stdout.
+- **`get_feed`** — query the unified feed with filters (limit, channel_ids, channel_types, tags, query, since)
+
+### Introspection
+
+- **`get_channel_types`** — list all supported channel types with config schemas
+
+### Channel Management
+
+- **`list_channels`** — list configured channels with sync status
+- **`create_channel`** — add a new channel (validates, persists, initial sync)
+- **`update_channel`** — update name, config, tags, or enabled state
+- **`delete_channel`** — remove a channel and its cached items
+- **`sync_channel`** — force an immediate refresh
 
 ## Build
 
@@ -30,26 +51,33 @@ This starts the MCP server on stdio. It expects JSON-RPC messages on stdin and r
 npm run build
 ```
 
-Compiles TypeScript to `dist/`.
+## Run standalone (for testing)
 
-## Configure feeds
-
-Edit `feeds.json` to add or remove RSS/Atom feed URLs:
-
-```json
-{
-  "feeds": [
-    { "name": "simonwillison.net", "url": "https://simonwillison.net/atom/everything/" },
-    { "name": "Marca Football", "url": "https://e00-marca.uecdn.es/rss/en/football.xml" }
-  ]
-}
+```bash
+npm run dev
 ```
 
-## Tool: `get_feed`
+## Architecture
 
-| Parameter | Type   | Required | Description                              |
-|-----------|--------|----------|------------------------------------------|
-| `limit`   | number | no       | Max items to return (default 20, max 100)|
-| `source`  | string | no       | Filter by feed name or URL substring     |
+```
+src/
+  index.ts                 — server bootstrap + adapter registration
+  core/
+    types.ts               — domain types (NormalizedItem, InfoChannel, ChannelAdapter, etc.)
+    feed-service.ts        — FeedService orchestrator
+    sync-coordinator.ts    — background + on-demand sync with concurrency control
+    adapter-registry.ts    — pluggable adapter registry
+  stores/
+    channel-store.ts       — channel config persistence (JSON)
+    item-store.ts          — in-memory item store with query/filter
+    sync-state-store.ts    — sync cursor/state persistence (JSON)
+  adapters/
+    rss.ts                 — RSS/Atom adapter
+    youtube-podcast.ts     — YouTube channel adapter (Atom feed)
+    github-trends.ts       — GitHub repo tracker (REST API)
+  mcp/
+    tools.ts               — MCP tool definitions
+    render.ts              — text rendering for MCP responses
+```
 
-Returns feed items with `title`, `link`, `published`, `source`, and `snippet` fields.
+Adding a new channel type: implement `ChannelAdapter`, call `registry.register()`. Zero changes to core.

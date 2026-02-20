@@ -284,3 +284,6 @@ package-lock.json
 *v8.log
 /lib/
 /dist/
+
+# NeuralPulse runtime data
+/data/

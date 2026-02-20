@@ -1,50 +1,53 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
-import { getFeed } from "./feeds.js";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { AdapterRegistry } from "./core/adapter-registry.js";
+import { FeedService } from "./core/feed-service.js";
+import { SyncCoordinator } from "./core/sync-coordinator.js";
+import { JsonChannelStore } from "./stores/channel-store.js";
+import { InMemoryItemStore } from "./stores/item-store.js";
+import { JsonSyncStateStore } from "./stores/sync-state-store.js";
+import { RssAdapter } from "./adapters/rss.js";
+import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
+import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
+import { registerTools } from "./mcp/tools.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = resolve(__dirname, "..", "data");
+
+// ── Adapter registry ────────────────────────────────────────────
+
+const adapters = new AdapterRegistry();
+adapters.register(new RssAdapter());
+adapters.register(new YouTubePodcastAdapter());
+adapters.register(new GitHubTrendsAdapter());
+
+// ── Stores ──────────────────────────────────────────────────────
+
+const channelStore = new JsonChannelStore(resolve(DATA_DIR, "channels.json"));
+const itemStore = new InMemoryItemStore();
+const syncStateStore = new JsonSyncStateStore(resolve(DATA_DIR, "sync-state.json"));
+
+// ── Core services ───────────────────────────────────────────────
+
+const syncCoordinator = new SyncCoordinator(adapters, itemStore, syncStateStore, channelStore);
+const feedService = new FeedService(channelStore, itemStore, syncCoordinator, adapters);
+
+// ── MCP server ──────────────────────────────────────────────────
 
 const server = new McpServer({
   name: "neuralpulse",
-  version: "1.0.0",
+  version: "2.0.0",
 });
 
-server.tool(
-  "get_feed",
-  "Fetch latest items from your SmartFeed subscriptions. Returns raw entries (title, link, date, snippet) — summarise on your side.",
-  {
-    limit: z.number().int().min(1).max(100).optional().describe("Max items to return (default 20)"),
-    source: z.string().optional().describe("Filter by feed name or URL substring"),
-  },
-  async ({ limit, source }) => {
-    const items = await getFeed({ limit, source });
+registerTools(server, feedService, syncStateStore);
 
-    if (items.length === 0) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: source
-              ? `No items found for source "${source}". Check available feeds in feeds.json.`
-              : "No feed items found. Your feeds may be unreachable.",
-          },
-        ],
-      };
-    }
-
-    const text = items
-      .map(
-        (item, i) =>
-          `[${i + 1}] ${item.title}\n    Source: ${item.source}\n    Link: ${item.link}\n    Date: ${item.published}\n    ${item.snippet}`
-      )
-      .join("\n\n");
-
-    return {
-      content: [{ type: "text" as const, text }],
-    };
-  }
-);
+// ── Start ───────────────────────────────────────────────────────
 
 async function main() {
+  syncCoordinator.startBackgroundSync();
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
