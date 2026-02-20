@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve, join } from "node:path";
+import { homedir } from "node:os";
 
 import { AdapterRegistry } from "./core/adapter-registry.js";
 import { FeedService } from "./core/feed-service.js";
@@ -14,8 +14,10 @@ import { YouTubePodcastAdapter } from "./adapters/youtube-podcast.js";
 import { GitHubTrendsAdapter } from "./adapters/github-trends.js";
 import { registerTools } from "./mcp/tools.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = resolve(__dirname, "..", "data");
+const DATA_DIR = resolve(
+  process.env.NEURALPULSE_DATA_DIR ?? join(homedir(), ".neuralpulse"),
+  "data",
+);
 
 const LOCAL_USER_ID = "local";
 

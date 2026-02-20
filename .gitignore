@@ -287,3 +287,7 @@ package-lock.json
 
 # NeuralPulse runtime data
 /data/
+
+# Claude Desktop extension build
+/server/
+*.mcpb

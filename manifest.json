@@ -1,0 +1,27 @@
+{
+  "manifest_version": "0.2",
+  "name": "neuralpulse",
+  "version": "1.0.0",
+  "description": "Personalized content feed from RSS, YouTube, and GitHub — served through AI assistants via MCP",
+  "author": { "name": "manifoldhiker" },
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "GITHUB_TOKEN": "${user_config.github_token}"
+      }
+    }
+  },
+  "user_config": {
+    "github_token": {
+      "type": "string",
+      "title": "GitHub Token",
+      "description": "Optional GitHub personal access token for higher rate limits on GitHub Trends adapter",
+      "sensitive": true,
+      "required": false
+    }
+  }
+}

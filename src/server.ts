@@ -1,5 +1,7 @@
 import "dotenv/config";
 import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express, { type Request, type Response } from "express";
 import cors from "cors";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -43,6 +45,9 @@ const feedService = new FeedService(channelStore, itemStore, syncCoordinator, ad
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? true, credentials: true }));
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 // ── Health (before auth middleware) ─────────────────────────────
 

@@ -9,6 +9,8 @@
     "dev:server": "tsx src/server.ts",
     "start": "node dist/server.js",
     "briefing": "tsx src/briefing.ts",
+    "build:mcpb": "tsc -p tsconfig.mcpb.json",
+    "pack:mcpb": "npm run build:mcpb && mcpb pack",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push"
